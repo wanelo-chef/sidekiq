@@ -1,12 +1,11 @@
-Description
-===========
+Sidekiq
+=======
 
-Requirements
-============
+## Description
 
-Attributes
-==========
+## Requirements
 
-Usage
-=====
+## Attributes
+
+## Usage
 
