@@ -1,0 +1,11 @@
+---
+:verbose: <%= @verbose %>
+:namespace: <%= @namespace %>
+:concurrency: <%= @concurrency %>
+:processes: <%= @processes %>
+:pid_file: <%= @pid_dir %>/%s-%s.pid
+:timeout: <%= @timeout %>
+:queues:
+<% @queues.each do |queue_name, priority| %>
+  - [<%= queue_name %>, <%= priority %>]
+<% end %>
