@@ -1,0 +1,66 @@
+#!/bin/bash
+
+function usage() {
+  echo "Usage: sidekiq [options] command"
+  echo "  -c CONFIG_FILE   yaml file with sidekiq options"
+  echo "  -e RAILS_ENV     Rails environment to use"
+  echo "  -l LOG_FILE      Where to send STDOUT"
+  echo "  -p PROCESSES     Number of sidekiq processes to start (default 1)"
+  echo "  -r RVM_DIR       Where does RVM live? (optional)"
+  echo
+  echo "STDOUT from sidekiq processes will be redirected to LOG_FILE. Anything"
+  echo "written to STDERR will not be redirected however. When run from an SMF"
+  echo "service, STDERR will be collected by the SMF log for the service, and can"
+  echo "be read by tailing \`svcs -L service_name\`"
+}
+
+PROCESSES=1
+
+while getopts ":c:e:l:p:r:h" opt; do
+  case $opt in
+    c)
+      CONFIG_FILE=$OPTARG
+      ;;
+    e)
+      RAILS_ENV=$OPTARG
+      ;;
+    l)
+      LOG_FILE=$OPTARG
+      ;;
+    p)
+      PROCESSES=$OPTARG
+      ;;
+    r)
+      RVM_DIR=$OPTARG
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    \?)
+      echo >&2 "Invalid argument $OPTARG"
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z "$CONFIG_FILE" ]] || [[ -z "$RAILS_ENV" ]] || [[ -z "$LOG_FILE" ]]; then
+  usage
+  exit 1
+fi
+
+if [ ! -z "$RVM_DIR" ]; then
+  if [ ! -f "$RVM_DIR/scripts/rvm" ]; then
+    echo >&2 "Invalid RVM dir"
+    usage
+    exit 1
+  fi
+  . $RVM_DIR/scripts/rvm
+fi
+
+for (( i=1; i<$PROCESSES; i++ )); do
+  bundle exec sidekiq -e $RAILS_ENV -C $CONFIG_FILE >> $LOG_FILE &
+done
+
+bundle exec sidekiq -e $RAILS_ENV -C $CONFIG_FILE >> $LOG_FILE

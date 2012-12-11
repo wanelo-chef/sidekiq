@@ -23,6 +23,7 @@ action :create do
   user = new_resource.user
 
   service_name = new_resource.include_prefix ? "sidekiq-#{name}" : name
+  run_command = "/opt/local/lib/svc/method/sidekiq.sh"
 
   rails_env = new_resource.rails_env || node["sidekiq"]["rails_env"]
   config_dir = new_resource.config_dir || node["sidekiq"]["config_dir"]
@@ -75,6 +76,12 @@ action :create do
     supports :enable => true, :disable => true, :restart => true, :reload => true
   end
 
+  template run_command do
+    source "wrapper.sh.erb"
+    cookbook "sidekiq"
+    mode 0555
+  end
+
   template config_file do
     source "config.yml.erb"
     cookbook "sidekiq"
@@ -90,9 +97,12 @@ action :create do
   end
 
   smf service_name do
+    cmd = "#{run_command} -c #{config_file} -e #{rails_env} -l #{log_file}"
+    cmd << " -r /home/#{user}/.rvm" if new_resource.rvm
+
     user user
     group new_resource.group
-    start_command "#{command_prefix} bundle exec sidekiq -e %{config/rails_env} -C %{config/config_file} >> %{config/log_file}"
+    start_command cmd
     start_timeout 60
     stop_timeout new_resource.stop_timeout.to_i + 5
     working_directory "/home/#{user}/app/current"
