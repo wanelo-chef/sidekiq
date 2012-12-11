@@ -90,7 +90,7 @@ action :create do
               "timeout" => new_resource.stop_timeout,
               "pid_dir" => node["sidekiq"]["pid_dir"],
               "queues" => new_resource.queues
-    notifies :reload, "service[#{service_name}]"
+    notifies :restart, "service[#{service_name}]"
   end
 
   smf service_name do
