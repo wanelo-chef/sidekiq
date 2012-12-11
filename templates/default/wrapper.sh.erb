@@ -1,5 +1,8 @@
 #!/bin/bash
 
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
+
 function usage() {
   echo "Usage: sidekiq [options] command"
   echo "  -c CONFIG_FILE   yaml file with sidekiq options"
@@ -59,8 +62,6 @@ if [ ! -z "$RVM_DIR" ]; then
   . $RVM_DIR/scripts/rvm
 fi
 
-for (( i=1; i<$PROCESSES; i++ )); do
+for (( i=1; i<=$PROCESSES; i++ )); do
   bundle exec sidekiq -e $RAILS_ENV -C $CONFIG_FILE >> $LOG_FILE &
 done
-
-bundle exec sidekiq -e $RAILS_ENV -C $CONFIG_FILE >> $LOG_FILE

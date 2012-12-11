@@ -23,7 +23,7 @@ action :create do
   user = new_resource.user
 
   service_name = new_resource.include_prefix ? "sidekiq-#{name}" : name
-  run_command = "/opt/local/lib/svc/method/sidekiq.sh"
+  run_command = "/opt/local/bin/sidekiq.sh"
 
   rails_env = new_resource.rails_env || node["sidekiq"]["rails_env"]
   config_dir = new_resource.config_dir || node["sidekiq"]["config_dir"]
@@ -41,11 +41,9 @@ action :create do
   }
 
   path = %w(/opt/local/bin /opt/local/sbin /usr/bin /usr/sbin)
-  command_prefix = ""
 
   if new_resource.rvm
     path << "/home/#{user}/.rvm/bin"
-    command_prefix = "/home/#{user}/.rvm/scripts/rvm &&"
     environment_variables.merge!(
         "rvm_path" => "/home/#{user}/.rvm",
         "rvm_bin_path" => "/home/#{user}/.rvm/bin",
@@ -79,7 +77,7 @@ action :create do
   template run_command do
     source "wrapper.sh.erb"
     cookbook "sidekiq"
-    mode 0555
+    mode 0755
   end
 
   template config_file do
@@ -89,7 +87,6 @@ action :create do
     variables "verbose" => new_resource.verbose,
               "namespace" => new_resource.namespace,
               "concurrency" => new_resource.concurrency,
-              "processes" => new_resource.processes,
               "timeout" => new_resource.stop_timeout,
               "pid_dir" => node["sidekiq"]["pid_dir"],
               "queues" => new_resource.queues
@@ -97,7 +94,7 @@ action :create do
   end
 
   smf service_name do
-    cmd = "#{run_command} -c #{config_file} -e #{rails_env} -l #{log_file}"
+    cmd = "#{run_command} -c #{config_file} -e #{rails_env} -l #{log_file} -p #{new_resource.processes}"
     cmd << " -r /home/#{user}/.rvm" if new_resource.rvm
 
     user user
