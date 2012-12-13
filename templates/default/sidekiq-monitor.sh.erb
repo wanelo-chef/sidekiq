@@ -1,0 +1,61 @@
+#!/bin/bash
+
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
+
+function usage() {
+  echo "Usage: sidekiq [options] command"
+  echo "  -c CONFIG_FILE   yaml file with sidekiq options"
+  echo "  -e RAILS_ENV     Rails environment to use"
+  echo "  -r RACKUP_FILE   Path to rackup file"
+  echo "  -R RVM_DIR       Where does RVM live? (optional)"
+  echo
+  echo "STDOUT from sidekiq processes will be redirected to LOG_FILE. Anything"
+  echo "written to STDERR will not be redirected however. When run from an SMF"
+  echo "service, STDERR will be collected by the SMF log for the service, and can"
+  echo "be read by tailing \`svcs -L service_name\`"
+}
+
+PROCESSES=1
+
+while getopts ":c:e:r:R:h" opt; do
+  case $opt in
+    c)
+      CONFIG_FILE=$OPTARG
+      ;;
+    e)
+      RAILS_ENV=$OPTARG
+      ;;
+    r)
+      RACKUP_FILE=$OPTARG
+      ;;
+    R)
+      RVM_DIR=$OPTARG
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    \?)
+      echo >&2 "Invalid argument $OPTARG"
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z "$CONFIG_FILE" ]] || [[ -z "$RAILS_ENV" ]] || [[ -z "RACKUP_FILE" ]]; then
+  usage
+  exit 1
+fi
+
+if [ ! -z "$RVM_DIR" ]; then
+  if [ ! -f "$RVM_DIR/scripts/rvm" ]; then
+    echo >&2 "Invalid RVM dir"
+    usage
+    exit 1
+  fi
+  . $RVM_DIR/scripts/rvm
+fi
+
+bundle exec unicorn -E $RAILS_ENV -c $CONFIG_FILE -D $RACKUP_FILE &
