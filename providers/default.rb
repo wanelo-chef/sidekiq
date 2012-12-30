@@ -35,9 +35,9 @@ action :create do
 
   environment_variables = {
       "RUBY_HEAP_MIN_SLOTS" => "500000",
-      "RUBY_HEAP_SLOTS_INCREMENT" => "250000",
+      "RUBY_HEAP_SLOTS_INCREMENT" => "100000",
       "RUBY_HEAP_SLOTS_GROWTH_FACTOR" => "1",
-      "RUBY_GC_MALLOC_LIMIT" => "50000000"
+      "RUBY_GC_MALLOC_LIMIT" => "30000000"
   }
 
   path = %w(/opt/local/bin /opt/local/sbin /usr/bin /usr/sbin)
@@ -87,6 +87,7 @@ action :create do
     variables "verbose" => new_resource.verbose,
               "namespace" => new_resource.namespace,
               "concurrency" => new_resource.concurrency,
+              "processes" => new_resource.processes,
               "timeout" => new_resource.stop_timeout,
               "pid_dir" => node["sidekiq"]["pid_dir"],
               "queues" => new_resource.queues
