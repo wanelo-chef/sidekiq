@@ -8,4 +8,4 @@ version          '0.0.4'
 
 supports 'smartos'
 
-depends 'smf'
+depends 'smf', '>= 0.6.8'
