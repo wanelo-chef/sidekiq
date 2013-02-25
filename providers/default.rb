@@ -23,21 +23,21 @@ action :create do
   user = new_resource.user
 
   service_name = new_resource.include_prefix ? "sidekiq-#{name}" : name
-  run_command = "/opt/local/bin/sidekiq.sh"
+  run_command = '/opt/local/bin/sidekiq.sh'
 
-  rails_env = new_resource.rails_env || node["sidekiq"]["rails_env"]
-  config_dir = new_resource.config_dir || node["sidekiq"]["config_dir"]
-  pid_dir = new_resource.pid_dir || node["sidekiq"]["pid_dir"]
-  log_dir = new_resource.log_dir || node["sidekiq"]["log_dir"]
+  rails_env = new_resource.rails_env || node['sidekiq']['rails_env']
+  config_dir = new_resource.config_dir || node['sidekiq']['config_dir']
+  pid_dir = new_resource.pid_dir || node['sidekiq']['pid_dir']
+  log_dir = new_resource.log_dir || node['sidekiq']['log_dir']
 
   config_file = "#{config_dir}/#{name}.yml"
   log_file = "#{log_dir}/sidekiq-#{name}.log"
 
   environment_variables = {
-      "RUBY_HEAP_MIN_SLOTS" => "500000",
-      "RUBY_HEAP_SLOTS_INCREMENT" => "100000",
-      "RUBY_HEAP_SLOTS_GROWTH_FACTOR" => "1",
-      "RUBY_GC_MALLOC_LIMIT" => "30000000"
+      'RUBY_HEAP_MIN_SLOTS' => '500000',
+      'RUBY_HEAP_SLOTS_INCREMENT' => '100000',
+      'RUBY_HEAP_SLOTS_GROWTH_FACTOR' => '1',
+      'RUBY_GC_MALLOC_LIMIT' => '30000000'
   }
 
   path = %w(/opt/local/bin /opt/local/sbin /usr/bin /usr/sbin)
@@ -45,12 +45,12 @@ action :create do
   if new_resource.rvm
     path << "/home/#{user}/.rvm/bin"
     environment_variables.merge!(
-        "rvm_path" => "/home/#{user}/.rvm",
-        "rvm_bin_path" => "/home/#{user}/.rvm/bin",
-        "rvm_prefix" => "/home/#{user}",
-        "TERM" => "xterm",
-        "PATH" => path.join(":"),
-        "GEM_HOME" => "/home/#{user}/.rvm/gems/#{new_resource.rvm}"
+        'rvm_path' => "/home/#{user}/.rvm",
+        'rvm_bin_path' => "/home/#{user}/.rvm/bin",
+        'rvm_prefix' => "/home/#{user}",
+        'TERM' => 'xterm',
+        'PATH' => path.join(':'),
+        'GEM_HOME' => "/home/#{user}/.rvm/gems/#{new_resource.rvm}"
     )
   end
 
@@ -75,22 +75,22 @@ action :create do
   end
 
   template run_command do
-    source "wrapper.sh.erb"
-    cookbook "sidekiq"
+    source 'wrapper.sh.erb'
+    cookbook 'sidekiq'
     mode 0755
   end
 
   template config_file do
-    source "config.yml.erb"
-    cookbook "sidekiq"
+    source 'config.yml.erb'
+    cookbook 'sidekiq'
     mode 0755
-    variables "verbose" => new_resource.verbose,
-              "namespace" => new_resource.namespace,
-              "concurrency" => new_resource.concurrency,
-              "processes" => new_resource.processes,
-              "timeout" => new_resource.stop_timeout,
-              "pid_dir" => node["sidekiq"]["pid_dir"],
-              "queues" => new_resource.queues
+    variables 'verbose' => new_resource.verbose,
+              'namespace' => new_resource.namespace,
+              'concurrency' => new_resource.concurrency,
+              'processes' => new_resource.processes,
+              'timeout' => new_resource.stop_timeout,
+              'pid_dir' => node['sidekiq']['pid_dir'],
+              'queues' => new_resource.queues
     notifies :restart, "service[#{service_name}]"
   end
 
@@ -107,10 +107,10 @@ action :create do
 
     environment(environment_variables)
     property_groups(
-        "config" => {
-            "rails_env" => rails_env,
-            "config_file" => config_file,
-            "log_file" => log_file
+        'config' => {
+            'rails_env' => rails_env,
+            'config_file' => config_file,
+            'log_file' => log_file
         }
     )
   end

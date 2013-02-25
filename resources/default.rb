@@ -23,9 +23,9 @@ attribute :name, :kind_of => String, :name_attribute => true, :required => true
 attribute :include_prefix, :kind_of => [TrueClass, FalseClass], :default => true
 
 attribute :user, :kind_of => [String], :required => true
-attribute :group, :kind_of => [String, NilClass], :default => "root"
+attribute :group, :kind_of => [String, NilClass], :default => 'root'
 
-attribute :namespace, :kind_of => String, :default => "sq"
+attribute :namespace, :kind_of => String, :default => 'sq'
 attribute :queues, :kind_of => Hash, :required => true
 
 attribute :verbose, :kind_of => [TrueClass, FalseClass], :default => false
