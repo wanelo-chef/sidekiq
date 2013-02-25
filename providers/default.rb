@@ -100,6 +100,8 @@ action :create do
 
     user user
     group new_resource.group
+    project new_resource.project
+
     start_command cmd
     start_timeout 60
     stop_timeout new_resource.stop_timeout.to_i + 5

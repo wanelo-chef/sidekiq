@@ -24,6 +24,7 @@ attribute :include_prefix, :kind_of => [TrueClass, FalseClass], :default => true
 
 attribute :user, :kind_of => [String], :required => true
 attribute :group, :kind_of => [String, NilClass], :default => 'root'
+attribute :project, :kind_of => [String, NilClass], :default => nil
 
 attribute :namespace, :kind_of => String, :default => 'sq'
 attribute :queues, :kind_of => Hash, :required => true
