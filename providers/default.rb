@@ -18,6 +18,7 @@
 #
 
 action :create do
+  new_resource.updated_by_last_action(false)
 
   name = new_resource.name
   user = new_resource.user
@@ -78,6 +79,7 @@ action :create do
     source 'wrapper.sh.erb'
     cookbook 'sidekiq'
     mode 0755
+    notifies :send_notification, new_resource, :immediately
   end
 
   template config_file do
@@ -91,7 +93,7 @@ action :create do
               'timeout' => new_resource.stop_timeout,
               'pid_dir' => node['sidekiq']['pid_dir'],
               'queues' => new_resource.queues
-    notifies :restart, "service[#{service_name}]"
+    notifies :send_notification, new_resource, :immediately
   end
 
   smf service_name do
@@ -115,5 +117,10 @@ action :create do
             'log_file' => log_file
         }
     )
+    notifies :send_notification, new_resource, :immediately
   end
+end
+
+action :send_notification do
+  new_resource.updated_by_last_action(true)
 end

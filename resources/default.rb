@@ -17,7 +17,8 @@
 # limitations under the License.
 #
 
-actions :create
+actions :create, :send_notification
+default_action :create
 
 attribute :name, :kind_of => String, :name_attribute => true, :required => true
 attribute :include_prefix, :kind_of => [TrueClass, FalseClass], :default => true
@@ -43,8 +44,3 @@ attribute :config_dir, :kind_of => [String, NilClass], :default => nil
 attribute :pid_dir, :kind_of => [String, NilClass], :default => nil
 attribute :log_dir, :kind_of => [String, NilClass], :default => nil
 attribute :rails_env, :kind_of => [String, NilClass], :default => nil
-
-def initialize(*args)
-  super(*args)
-  @action = :create
-end
