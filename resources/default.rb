@@ -37,6 +37,7 @@ attribute :processes, :kind_of => Integer, :default => 1
 attribute :stop_timeout, :kind_of => Integer, :default => 30
 
 attribute :rvm, :kind_of => [String, FalseClass, NilClass], :default => false
+attribute :environment, :kind_of => Hash, :default => {}
 
 # optional resource
 # these default to node attributes if unset

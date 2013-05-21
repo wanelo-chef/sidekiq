@@ -109,7 +109,7 @@ action :create do
     stop_timeout new_resource.stop_timeout.to_i + 5
     working_directory "/home/#{user}/app/current"
 
-    environment(environment_variables)
+    environment(environment_variables.merge!(new_resource.environment))
     property_groups(
         'config' => {
             'rails_env' => rails_env,
