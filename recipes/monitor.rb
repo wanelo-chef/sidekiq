@@ -22,8 +22,13 @@ application_directory = "/home/#{user}/app/current"
 shared_directory = "/home/#{user}/app/shared"
 rails_env = node['sidekiq']['rails_env']
 
-rvm_path = "/home/#{user}/.rvm"
-rvm_version = node['sidekiq']['monitor']['rvm']
+path_additions = node['sidekiq']['monitor']['path_additions'].to_a
+
+if monitor_uses_rvm?
+  rvm_path = "/home/#{user}/.rvm"
+  rvm_version = node['sidekiq']['monitor']['rvm']
+  path_additions << "/home/#{user}/.rvm/bin"
+end
 
 sidekiq_monitor_run_path = "#{application_directory}/sidekiq_monitor.ru"
 sidekiq_monitor_config_path = "#{application_directory}/config/unicorn/sidekiq_monitor.rb"
@@ -36,7 +41,7 @@ environment_variables = {
     'rvm_bin_path' => "/home/#{user}/.rvm/bin",
     'rvm_prefix' => "/home/#{user}",
     'TERM' => 'xterm',
-    'PATH' => "/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin:/home/#{user}/.rvm/bin",
+    'PATH' => "#{path_additions.join(':')}:/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin",
     'GEM_HOME' => "/home/#{user}/.rvm/gems/#{rvm_version}"
 }
 
@@ -46,13 +51,14 @@ template run_command do
   mode 0755
 end
 
-smf 'sidekiq-monitor' do
-  cmd = "#{run_command} -c #{sidekiq_monitor_config_path} -e #{rails_env} -r #{sidekiq_monitor_run_path} -R #{rvm_path}"
+start_command = "#{run_command} -c #{sidekiq_monitor_config_path} -e #{rails_env} -r #{sidekiq_monitor_run_path}"
+start_command << " -R #{rvm_path}" if monitor_uses_rvm?
 
+smf 'sidekiq-monitor' do
   user user
   group node['sidekiq']['monitor']['group']
 
-  start_command cmd
+  start_command start_command
   start_timeout 60
 
   stop_timeout 15
