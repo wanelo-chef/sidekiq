@@ -110,6 +110,7 @@ action :create do
     working_directory "/home/#{user}/app/current"
 
     environment(environment_variables.merge!(new_resource.environment))
+    dependencies(new_resource.dependencies)
     property_groups(
         'config' => {
             'rails_env' => rails_env,

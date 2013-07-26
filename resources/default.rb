@@ -39,6 +39,8 @@ attribute :stop_timeout, :kind_of => Integer, :default => 30
 attribute :rvm, :kind_of => [String, FalseClass, NilClass], :default => false
 attribute :environment, :kind_of => Hash, :default => {}
 
+attribute :dependencies, :kind_of => Array, :default => []
+
 # optional resource
 # these default to node attributes if unset
 attribute :config_dir, :kind_of => [String, NilClass], :default => nil
