@@ -34,7 +34,9 @@ attribute :verbose, :kind_of => [TrueClass, FalseClass], :default => false
 attribute :concurrency, :kind_of => Integer, :default => 1
 attribute :processes, :kind_of => Integer, :default => 1
 
+attribute :start_timeout, :kind_of => Integer, :default => 60
 attribute :stop_timeout, :kind_of => Integer, :default => 30
+attribute :restart_timeout, :kind_of => Integer, :default => 30
 
 attribute :rvm, :kind_of => [String, FalseClass, NilClass], :default => false
 attribute :environment, :kind_of => Hash, :default => {}
