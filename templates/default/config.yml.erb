@@ -4,7 +4,7 @@
 :concurrency: <%= @concurrency %>
 :processes: <%= @processes %>
 :pid_file: <%= @pid_dir %>/%s-%s.pid
-:timeout: <%= @timeout %>
+:timeout: <%= @sidekiq_timeout %>
 :queues:
 <% @queues.each do |queue_name, priority| %>
   - [<%= queue_name %>, <%= priority %>]

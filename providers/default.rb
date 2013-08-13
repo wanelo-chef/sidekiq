@@ -90,7 +90,7 @@ action :create do
               'namespace' => new_resource.namespace,
               'concurrency' => new_resource.concurrency,
               'processes' => new_resource.processes,
-              'timeout' => new_resource.stop_timeout,
+              'sidekiq_timeout' => new_resource.sidekiq_timeout,
               'pid_dir' => node['sidekiq']['pid_dir'],
               'queues' => new_resource.queues
     notifies :send_notification, new_resource, :immediately
