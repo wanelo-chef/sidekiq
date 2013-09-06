@@ -66,9 +66,14 @@ action :create do
   end
 
   directory log_dir do
-    owner user
-    group new_resource.group
     mode 0775
+  end
+
+  file log_file do
+    user user
+    group new_resource.group
+    mode 0755
+    action :create_if_missing
   end
 
   service service_name do
