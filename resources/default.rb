@@ -46,6 +46,7 @@ attribute :rvm, :kind_of => [String, FalseClass, NilClass], :default => false
 attribute :environment, :kind_of => Hash, :default => {}
 
 attribute :dependencies, :kind_of => Array, :default => []
+attribute :working_directory, :kind_of => [String, NilClass], :default => nil
 
 # optional resource
 # these default to node attributes if unset

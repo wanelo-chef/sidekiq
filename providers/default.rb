@@ -113,7 +113,7 @@ action :create do
     start_timeout new_resource.start_timeout
     stop_timeout new_resource.stop_timeout
     restart_timeout new_resource.restart_timeout
-    working_directory "/home/#{user}/app/current"
+    working_directory new_resource.working_directory || "/home/#{user}/app/current"
 
     environment(environment_variables.merge!(new_resource.environment))
     dependencies(new_resource.dependencies)
