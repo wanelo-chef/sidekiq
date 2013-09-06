@@ -102,8 +102,10 @@ action :create do
   end
 
   smf service_name do
-    cmd = "#{run_command} -c #{config_file} -e #{rails_env} -l #{log_file} -p #{new_resource.processes}"
-    cmd << " -r /home/#{user}/.rvm" if new_resource.rvm
+    cmd = ""
+    cmd << "#{run_command} -c #{config_file} -e #{rails_env} -l #{log_file} -p #{new_resource.processes}"
+    cmd << " -R /home/#{user}/.rvm" if new_resource.rvm
+    cmd << " -r #{new_resource.worker_file}" if new_resource.worker_file
 
     user user
     group new_resource.group

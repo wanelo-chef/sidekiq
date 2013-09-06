@@ -9,7 +9,8 @@ function usage() {
   echo "  -e RAILS_ENV     Rails environment to use"
   echo "  -l LOG_FILE      Where to send STDOUT"
   echo "  -p PROCESSES     Number of sidekiq processes to start (default 1)"
-  echo "  -r RVM_DIR       Where does RVM live? (optional)"
+  echo "  -R RVM_DIR       Where does RVM live? (optional)"
+  echo "  -r REQUIRE_FILE  What file should sidekiq require when it starts?"
   echo
   echo "STDOUT from sidekiq processes will be redirected to LOG_FILE. Anything"
   echo "written to STDERR will not be redirected however. When run from an SMF"
@@ -33,8 +34,11 @@ while getopts ":c:e:l:p:r:h" opt; do
     p)
       PROCESSES=$OPTARG
       ;;
-    r)
+    R)
       RVM_DIR=$OPTARG
+      ;;
+    r)
+      REQUIRE=" -r $OPTARG"
       ;;
     h)
       usage
@@ -63,5 +67,5 @@ if [ ! -z "$RVM_DIR" ]; then
 fi
 
 for (( i=1; i<=$PROCESSES; i++ )); do
-  bundle exec sidekiq -e $RAILS_ENV -C $CONFIG_FILE >> $LOG_FILE &
+  bundle exec sidekiq -e $RAILS_ENV -C $CONFIG_FILE $REQUIRE >> $LOG_FILE &
 done
