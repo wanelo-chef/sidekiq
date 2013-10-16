@@ -5,20 +5,16 @@ export LC_ALL="en_US.UTF-8"
 
 function usage() {
   echo "Usage: sidekiq [options] command"
-  echo "  -c CONFIG_FILE   yaml file with sidekiq options"
+  echo "  -c CONFIG_FILE   yaml file with Sidekiq options"
   echo "  -e RAILS_ENV     Rails environment to use"
-  echo "  -l LOG_FILE      Where to send STDOUT"
+  echo "  -l LOG_FILE      Where to send Sidekiq logs"
   echo "  -p PROCESSES     Number of sidekiq processes to start (default 1)"
   echo "  -R RVM_DIR       Where does RVM live? (optional)"
-  echo "  -r REQUIRE_FILE  What file should sidekiq require when it starts?"
-  echo
-  echo "STDOUT from sidekiq processes will be redirected to LOG_FILE. Anything"
-  echo "written to STDERR will not be redirected however. When run from an SMF"
-  echo "service, STDERR will be collected by the SMF log for the service, and can"
-  echo "be read by tailing \`svcs -L service_name\`"
+  echo "  -r REQUIRE_FILE  What file should Sidekiq require when it starts?"
 }
 
 PROCESSES=1
+LOGFILE=/var/log/sidekiq.log
 
 while getopts ":c:e:l:p:r:h" opt; do
   case $opt in
@@ -67,5 +63,5 @@ if [ ! -z "$RVM_DIR" ]; then
 fi
 
 for (( i=1; i<=$PROCESSES; i++ )); do
-  bundle exec sidekiq -e $RAILS_ENV -C $CONFIG_FILE $REQUIRE >> $LOG_FILE &
+  bundle exec sidekiq -e $RAILS_ENV -C $CONFIG_FILE $REQUIRE -L $LOG_FILE &
 done
