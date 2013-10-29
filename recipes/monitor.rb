@@ -17,49 +17,17 @@
 # limitations under the License.
 #
 
-application_directory = node['sidekiq']['monitor']['project_root']
-path_additions = node['sidekiq']['monitor']['path_additions'].to_a
-
-sidekiq_monitor_rackup_file = "#{application_directory}/sidekiq_monitor.ru"
-sidekiq_monitor_config_file = "#{application_directory}/config/unicorn/sidekiq_monitor.rb"
-
-run_command = '/opt/local/bin/sidekiq-monitor.sh'
-
-environment_variables = {
-    'TERM' => 'xterm',
-    'PATH' => "#{path_additions.join(':')}:/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin"
-}
-
 service 'sidekiq-monitor' do
   supports :enable => true, :disable => true, :restart => true, :reload => true
   action :nothing
 end
 
-template '/opt/local/bin/sidekiq-monitor.sh' do
-  source 'sidekiq-monitor.sh.erb'
-  cookbook 'sidekiq'
-  mode 0755
-  notifies :restart, 'service[sidekiq-monitor]'
-end
-
-smf 'sidekiq-monitor' do
+sidekiq_monitor 'sidekiq-monitor' do
   user node['sidekiq']['monitor']['user']
   group node['sidekiq']['monitor']['group']
-
-  start_command "/opt/local/bin/sidekiq-monitor.sh -c %{config/config_file} -e %{config/rack_env} -r %{config/rackup_file}"
-  start_timeout 60
-
-  stop_timeout 15
-  working_directory application_directory
-
-  environment(environment_variables)
-  property_groups(
-      'config' => {
-          'config_file' => sidekiq_monitor_config_file,
-          'rack_env' => node['sidekiq']['monitor']['rack_env'],
-          'rackup_file' => sidekiq_monitor_rackup_file
-      }
-  )
+  application_dir node['sidekiq']['monitor']['project_root']
+  path_additions node['sidekiq']['monitor']['path_additions'].to_a
+  rack_env node['sidekiq']['monitor']['rack_env']
 
   notifies :restart, 'service[sidekiq-monitor]'
 end
