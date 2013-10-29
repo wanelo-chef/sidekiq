@@ -22,9 +22,10 @@ action :create do
                 'PATH' => "#{new_resource.path_additions.join(':')}:/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin")
     property_groups(
       'config' => {
-        'config_file' => "#{new_resource.application_dir}/sidekiq_monitor.ru",
+        'config_file' => "#{new_resource.application_dir}/config/unicorn/sidekiq_monitor.rb",
         'rack_env' => new_resource.rack_env,
-        'rackup_file' => "#{new_resource.application_dir}/config/unicorn/sidekiq_monitor.rb"
+        'rackup_file' => "#{new_resource.application_dir}/sidekiq_monitor.ru"
+
       }
     )
 
