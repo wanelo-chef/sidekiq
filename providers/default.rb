@@ -92,7 +92,6 @@ action :create do
     cookbook 'sidekiq'
     mode 0755
     variables 'verbose' => new_resource.verbose,
-              'namespace' => new_resource.namespace,
               'concurrency' => new_resource.concurrency,
               'processes' => new_resource.processes,
               'sidekiq_timeout' => new_resource.sidekiq_timeout,

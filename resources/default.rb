@@ -29,7 +29,6 @@ attribute :project, :kind_of => [String, NilClass], :default => nil
 
 attribute :worker_file, :kind_of => [String, NilClass], :default => nil
 
-attribute :namespace, :kind_of => String, :default => 'sq'
 attribute :queues, :kind_of => Hash, :required => true
 
 attribute :verbose, :kind_of => [TrueClass, FalseClass], :default => false
