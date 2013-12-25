@@ -24,16 +24,10 @@ There are two ways to deploy a Sidekiq Monitor. You can run the `sidekiq::monito
 recipe, which will install a service named `sidekiq-monitor` configured based on
 node attributes. You can also use the `sidekiq_monitor` LWRP.
 
-Both ways assume that Sidekiq Monitor runs in a Unicorn process out of a Ruby
-project directory.
-
-A unicorn config file must be deployed at
-`$PROJECT_ROOT/config/unicorn/sidekiq_monitor.rb` and a rackup file at
-`$PROJECT_ROOT/sidekiq_monitor.ru`. See below for definition of $PROJECT_ROOT.
+Both ways use a small wrapper Rack application to run the monitoring
+Sinatra app that ships with Sidekiq.
 
 ### `sidekiq::monitor` recipe
-
-`$PROJECT_ROOT` is set via the node attribute `node['sidekiq']['monitor']['project_root']`.
 
 The user by which Sidekiq Monitor is run is set via the node attribute
 `node['sidekiq']['monitor']['user']`.
@@ -58,10 +52,23 @@ end
 sidekiq_monitor 'my-sidekiq-monitor' do
   user 'myuser'
   group 'staff'
-  application_dir '/home/myuser/app/current'
-  path_additions '/opt/rbenv/versions/2.0.0/bin'
+  path_additions ['/opt/rbenv/versions/2.0.0/bin']
+
+  redis_host node['privateaddress']
+  redis_port 6379
+  redis_db 11
+  redis_namespace 'sk'
+
+  unicorn_host node['privateaddress']
+  unicorn_port 8880
   rack_env 'production'
 
   notifies :restart, 'service[my-sidekiq-monitor]'
 end
 ```
+
+By default the LWRP will create a user 'sidekiq-monitor' and group
+'sidekiq-monitor' to run as. It will check out a small Rack application
+at `/opt/sidekiq-monitor`. Configuration files will go into
+`/etc/sidekiq-monitor` and log files will go in
+`/var/log/sidekiq-monitor`.
