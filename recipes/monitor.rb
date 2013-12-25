@@ -25,9 +25,13 @@ end
 sidekiq_monitor 'sidekiq-monitor' do
   user node['sidekiq']['monitor']['user']
   group node['sidekiq']['monitor']['group']
-  application_dir node['sidekiq']['monitor']['project_root']
   path_additions node['sidekiq']['monitor']['path_additions'].to_a
   rack_env node['sidekiq']['monitor']['rack_env']
+
+  redis_host node[node['sidekiq']['monitor']['redis']['listen_attribute']]
+  redis_port node['sidekiq']['monitor']['redis']['port']
+  redis_db node['sidekiq']['monitor']['redis']['db']
+  redis_namespace node['sidekiq']['monitor']['redis']['namespace']
 
   notifies :restart, 'service[sidekiq-monitor]'
 end

@@ -1,10 +1,52 @@
 action :create do
   new_resource.updated_by_last_action(false)
 
-  template '/opt/local/bin/sidekiq-monitor.sh' do
-    source 'sidekiq-monitor.sh.erb'
+  name = new_resource.name
+
+  group new_resource.group do
+    only_if { new_resource.group }
+  end
+
+  user new_resource.user do
+    gid new_resource.group if new_resource.group
+  end
+
+  %w(/var/log/sidekiq-monitor /var/run/sidekiq-monitor /etc/sidekiq-monitor).each do |dir|
+    directory dir do
+      recursive true
+      owner new_resource.user
+      group new_resource.group
+      mode 0755
+    end
+  end
+
+  git new_resource.sidekiq_monitor_dir do
+    repository 'https://github.com/wanelo/sidekiq-monitor'
+
+    notifies :send_notification, new_resource, :immediately
+  end
+
+  execute "chown sidekiq monitor dir #{new_resource.sidekiq_monitor_dir}" do
+    command "chown -R #{new_resource.user} #{new_resource.sidekiq_monitor_dir}"
+  end
+
+  execute 'bundle install sidekiq-monitor' do
+    command "bundle install --path #{new_resource.sidekiq_monitor_dir}/.bundle"
+    cwd new_resource.sidekiq_monitor_dir
+    user new_resource.user
+    environment 'PATH' => "#{new_resource.path_additions.join(':')}:/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin"
+  end
+
+  template "/etc/sidekiq-monitor/#{name}.yml" do
+    source "sidekiq-monitor/config.yml.erb"
     cookbook 'sidekiq'
-    mode 0755
+    owner new_resource.user
+    group new_resource.group
+    variables 'host' => new_resource.redis_host,
+              'port' => new_resource.redis_port,
+              'db' => new_resource.redis_db,
+              'namespace' => new_resource.redis_namespace
+
     notifies :send_notification, new_resource, :immediately
   end
 
@@ -12,20 +54,28 @@ action :create do
     user new_resource.user
     group new_resource.group
 
-    start_command "/opt/local/bin/sidekiq-monitor.sh -c %{config/config_file} -e %{config/rack_env} -r %{config/rackup_file}"
+    start_command "bundle exec unicorn -o %{config/host} -p %{config/port} -E %{config/rack_env} -c %{config/unicorn_config} -D %{config/rackup_file}"
     start_timeout 60
     stop_command ':kill -9'
     stop_timeout 15
-    working_directory new_resource.application_dir
+    working_directory new_resource.sidekiq_monitor_dir
 
     environment('TERM' => 'xterm',
-                'PATH' => "#{new_resource.path_additions.join(':')}:/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin")
+                'PATH' => "#{new_resource.path_additions.join(':')}:/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin",
+                'CONFIG_YML' => "/etc/sidekiq-monitor/#{name}.yml",
+                'UNICORN_STDERR_FILE_NAME' => "#{name}.stderr.log",
+                'UNICORN_STDOUT_FILE_NAME' => "#{name}.stdout.log",
+                'PID_FILE_NAME' => "#{name}.pid",
+                'LANG' => 'en_US.UTF-8',
+                'LC_ALL' => 'en_US.UTF-8')
+
     property_groups(
       'config' => {
-        'config_file' => "#{new_resource.application_dir}/config/unicorn/sidekiq_monitor.rb",
+        'unicorn_config' => "#{new_resource.sidekiq_monitor_dir}/config/unicorn.rb",
         'rack_env' => new_resource.rack_env,
-        'rackup_file' => "#{new_resource.application_dir}/sidekiq_monitor.ru"
-
+        'rackup_file' => "#{new_resource.sidekiq_monitor_dir}/config.ru",
+        'host' => new_resource.unicorn_host,
+        'port' => new_resource.unicorn_port
       }
     )
 
