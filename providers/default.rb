@@ -116,6 +116,7 @@ action :create do
     restart_timeout new_resource.restart_timeout
     working_directory new_resource.working_directory || "/home/#{user}/app/current"
 
+    ignore ['signal']
     environment(environment_variables.merge!(new_resource.environment))
     dependencies(new_resource.dependencies)
     property_groups(
