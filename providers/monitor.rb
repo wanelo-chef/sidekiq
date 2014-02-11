@@ -34,7 +34,9 @@ action :create do
     command "bundle install --path #{new_resource.sidekiq_monitor_dir}/.bundle"
     cwd new_resource.sidekiq_monitor_dir
     user new_resource.user
-    environment 'PATH' => "#{new_resource.path_additions.join(':')}:/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin"
+    environment({
+      'PATH' => "#{new_resource.path_additions.join(':')}:/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin"
+    }.merge(new_resource.environment))
   end
 
   template "/etc/sidekiq-monitor/#{name}.yml" do
@@ -43,9 +45,9 @@ action :create do
     owner new_resource.user
     group new_resource.group
     variables 'host' => new_resource.redis_host,
-              'port' => new_resource.redis_port,
-              'db' => new_resource.redis_db,
-              'namespace' => new_resource.redis_namespace
+      'port' => new_resource.redis_port,
+      'db' => new_resource.redis_db,
+      'namespace' => new_resource.redis_namespace
 
     notifies :send_notification, new_resource, :immediately
   end
@@ -54,24 +56,30 @@ action :create do
     user new_resource.user
     group new_resource.group
 
-    start_command "bundle exec unicorn -o %{config/host} -p %{config/port} -E %{config/rack_env} -c %{config/unicorn_config} -D %{config/rackup_file}"
+    case new_resource.ruby_server
+      when 'unicorn'
+        start_command "bundle exec unicorn -o %{config/host} -p %{config/port} -E %{config/rack_env} -c %{config/unicorn_config} -D %{config/rackup_file}"
+      when 'puma'
+        start_command "bundle exec puma --config %{config/puma_config} --bind tcp://%{config/host}:%{config/port} --daemon %{config/rackup_file}"
+    end
     start_timeout 60
     stop_command ':kill -9'
     stop_timeout 15
     working_directory new_resource.sidekiq_monitor_dir
 
-    environment('TERM' => 'xterm',
-                'PATH' => "#{new_resource.path_additions.join(':')}:/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin",
-                'CONFIG_YML' => "/etc/sidekiq-monitor/#{name}.yml",
-                'UNICORN_STDERR_FILE_NAME' => "#{name}.stderr.log",
-                'UNICORN_STDOUT_FILE_NAME' => "#{name}.stdout.log",
-                'PID_FILE_NAME' => "#{name}.pid",
-                'LANG' => 'en_US.UTF-8',
-                'LC_ALL' => 'en_US.UTF-8')
+    environment({'TERM' => 'xterm',
+      'PATH' => "#{new_resource.path_additions.join(':')}:/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin",
+      'CONFIG_YML' => "/etc/sidekiq-monitor/#{name}.yml",
+      'STDERR_FILE_NAME' => "#{name}.stderr.log",
+      'STDOUT_FILE_NAME' => "#{name}.stdout.log",
+      'PID_FILE_NAME' => "#{name}.pid",
+      'LANG' => 'en_US.UTF-8',
+      'LC_ALL' => 'en_US.UTF-8'}.merge(new_resource.environment))
 
     property_groups(
       'config' => {
         'unicorn_config' => "#{new_resource.sidekiq_monitor_dir}/config/unicorn.rb",
+        'puma_config' => "#{new_resource.sidekiq_monitor_dir}/config/puma.rb",
         'rack_env' => new_resource.rack_env,
         'rackup_file' => "#{new_resource.sidekiq_monitor_dir}/config.ru",
         'host' => new_resource.unicorn_host,
