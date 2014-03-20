@@ -3,8 +3,8 @@ action :create do
 
   name = new_resource.name
 
-  group new_resource.group do
-    only_if { new_resource.group }
+  if new_resource.group
+    group new_resource.group
   end
 
   user new_resource.user do
