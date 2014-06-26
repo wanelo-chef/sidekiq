@@ -76,10 +76,6 @@ action :create do
     action :create_if_missing
   end
 
-  service service_name do
-    supports :enable => true, :disable => true, :restart => true, :reload => true
-  end
-
   template run_command do
     source 'wrapper.sh.erb'
     cookbook 'sidekiq'
