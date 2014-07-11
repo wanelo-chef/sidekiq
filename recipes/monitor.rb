@@ -17,11 +17,6 @@
 # limitations under the License.
 #
 
-service 'sidekiq-monitor' do
-  supports :enable => true, :disable => true, :restart => true, :reload => true
-  action :nothing
-end
-
 sidekiq_monitor 'sidekiq-monitor' do
   user node['sidekiq']['monitor']['user']
   group node['sidekiq']['monitor']['group']
@@ -35,3 +30,9 @@ sidekiq_monitor 'sidekiq-monitor' do
 
   notifies :restart, 'service[sidekiq-monitor]'
 end
+
+service 'sidekiq-monitor' do
+  supports :enable => true, :disable => true, :restart => true, :reload => true
+  action :nothing
+end
+
