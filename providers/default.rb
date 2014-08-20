@@ -105,6 +105,7 @@ action :create do
     user user
     group new_resource.group
     project new_resource.project
+    authorization new_resource.authorization
 
     start_command cmd
     start_timeout new_resource.start_timeout
