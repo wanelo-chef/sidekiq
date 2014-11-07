@@ -14,7 +14,7 @@ start() {
   local worker_file=`/usr/bin/svcprop -p config/worker_file $SMF_FMRI`
 
   if [ ! -z "${worker_file}" ]; then
-    $require=" -r ${worker_file}"
+    require=" -r ${worker_file}"
   fi
 
   for (( i=1; i<=$process_count; i++ )); do
