@@ -77,7 +77,7 @@ action :create do
   end
 
   template run_command do
-    source 'wrapper.sh.erb'
+    source 'smf_method.sh.erb'
     cookbook 'sidekiq'
     mode 0755
     notifies :send_notification, new_resource, :immediately
@@ -97,19 +97,16 @@ action :create do
   end
 
   smf service_name do
-    cmd = ""
-    cmd << "#{run_command} -c #{config_file} -e #{rails_env} -l #{log_file} -p #{new_resource.processes}"
-    cmd << " -R /home/#{user}/.rvm" if new_resource.rvm
-    cmd << " -r #{new_resource.worker_file}" if new_resource.worker_file
-
     user user
     group new_resource.group
     project new_resource.project
     authorization new_resource.authorization
 
-    start_command cmd
+    start_command run_command
     start_timeout new_resource.start_timeout
+    stop_command run_command
     stop_timeout new_resource.stop_timeout
+
     restart_timeout new_resource.restart_timeout
     working_directory new_resource.working_directory || "/home/#{user}/app/current"
 
@@ -118,9 +115,11 @@ action :create do
     dependencies(new_resource.dependencies)
     property_groups(
         'config' => {
-            'rails_env' => rails_env,
             'config_file' => config_file,
-            'log_file' => log_file
+            'log_file' => log_file,
+            'process_count' => new_resource.processes,
+            'rails_env' => rails_env,
+            'worker_file' => new_resource.worker_file
         }
     )
     notifies :send_notification, new_resource, :immediately

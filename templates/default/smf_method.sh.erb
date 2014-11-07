@@ -1,0 +1,45 @@
+#!/bin/bash
+
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
+
+. /lib/svc/share/smf_include.sh
+
+start() {
+  local require=""
+  local config_file=`svcprop -p config/config_file $SMF_FMRI`
+  local log_file=`svcprop -p config/log_file $SMF_FMRI`
+  local process_count=`svcprop -p config/process_count $SMF_FMRI`
+  local rails_env=`svcprop -p config/rails_env $SMF_FMRI`
+  local worker_file=`svcprop -p config/worker_file $SMF_FMRI`
+
+  if [ ! -z "${worker_file}" ]; then
+    $require=" -r ${worker_file}"
+  fi
+
+  for (( i=1; i<=$process_count; i++ )); do
+    bundle exec sidekiq -e $rails_env -C $config_file $require -L $log_file &
+  done
+}
+
+stop() {
+  contract=`svcprop -p restarter/contract $SMF_FMRI`
+  smf_kill_contract ${contract} USR1
+  smf_kill_contract ${contract} TERM
+}
+
+case "$SMF_METHOD" in
+'start')
+  start
+  ;;
+'stop')
+  stop
+  ;;
+'refresh')
+  # ok!
+  ;;
+*)
+  echo "Usage: $0 [start|stop|refresh]" >&2
+  exit 1
+  ;;
+esac
