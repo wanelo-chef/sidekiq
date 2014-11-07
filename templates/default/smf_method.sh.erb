@@ -11,7 +11,7 @@ start() {
   local log_file=`/usr/bin/svcprop -p config/log_file $SMF_FMRI`
   local process_count=`/usr/bin/svcprop -p config/process_count $SMF_FMRI`
   local rails_env=`/usr/bin/svcprop -p config/rails_env $SMF_FMRI`
-  local worker_file=`/usr/bin/svcprop -p config/worker_file $SMF_FMRI`
+  local worker_file=`/usr/bin/svcprop -p config/worker_file $SMF_FMRI | sed -e 's/^"//' -e 's/"$//'`
 
   if [ ! -z "${worker_file}" ]; then
     require=" -r ${worker_file}"
