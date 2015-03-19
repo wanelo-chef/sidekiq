@@ -39,8 +39,33 @@ action :create do
     }.merge(new_resource.environment))
   end
 
+  template '/opt/local/bin/sidekiq_monitor_runtime_dependencies' do
+    source 'sidekiq-monitor/sidekiq_monitor_runtime_dependencies.erb'
+    cookbook 'sidekiq'
+    mode 0755
+    variables 'user' => node['sidekiq']['monitor']['user'],
+      'group' => node['sidekiq']['monitor']['group']
+  end
+
+  smf 'sidekiq-monitor-dependencies' do
+    fmri '/application/setup/sidekiq-monitor-dependencies'
+    start_command '/opt/local/bin/sidekiq_monitor_runtime_dependencies'
+    stop_command 'true'
+    duration 'transient'
+    manifest_type 'setup'
+    dependencies [
+        { 'name' => 'multi-user', 'fmris' => ['svc:/milestone/multi-user'],
+          'grouping' => 'require_all', 'restart_on' => 'none', 'type' => 'service' }
+      ]
+    notifies :enable, 'service[sidekiq-monitor-dependencies]', :immediately
+  end
+
+  service 'sidekiq-monitor-dependencies' do
+    supports enable: true, disable: true, reload: true
+  end
+
   template "/etc/sidekiq-monitor/#{name}.yml" do
-    source "sidekiq-monitor/config.yml.erb"
+    source 'sidekiq-monitor/config.yml.erb'
     cookbook 'sidekiq'
     owner new_resource.user
     group new_resource.group
@@ -58,9 +83,9 @@ action :create do
 
     case new_resource.ruby_server
       when 'unicorn'
-        start_command "bundle exec unicorn -o %{config/host} -p %{config/port} -E %{config/rack_env} -c %{config/unicorn_config} -D %{config/rackup_file}"
+        start_command 'bundle exec unicorn -o %{config/host} -p %{config/port} -E %{config/rack_env} -c %{config/unicorn_config} -D %{config/rackup_file}'
       when 'puma'
-        start_command "bundle exec puma --config %{config/puma_config} --bind tcp://%{config/host}:%{config/port} --daemon %{config/rackup_file}"
+        start_command 'bundle exec puma --config %{config/puma_config} --bind tcp://%{config/host}:%{config/port} --daemon %{config/rackup_file}'
     end
     start_timeout 60
     stop_command ':kill -9'
@@ -86,6 +111,11 @@ action :create do
         'port' => new_resource.unicorn_port
       }
     )
+
+    dependencies [
+        { 'name' => 'sidekiq-monitor-dependencies', 'fmris' => ['svc:/application/setup/sidekiq-monitor-dependencies'],
+          'grouping' => 'require_all', 'restart_on' => 'none', 'type' => 'service' }
+      ]
 
     notifies :send_notification, new_resource, :immediately
   end

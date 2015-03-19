@@ -1,0 +1,10 @@
+#!/bin/bash
+
+mkdir -p /var/run/sidekiq-monitor
+mkdir -p /var/log/sidekiq-monitor
+
+chown -R <%= @user %>:<%= @group %> /var/run/sidekiq-monitor
+chown -R <%= @user %>:<%= @group %> /var/log/sidekiq-monitor
+
+chmod 0755 /var/run/sidekiq-monitor
+chmod 0755 /var/log/sidekiq-monitor
